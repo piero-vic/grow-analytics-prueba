@@ -10,7 +10,7 @@ import { authRouter } from "./routes/auth.js";
 
 dotenv.config();
 
-const ALLOWED_ORIGIN = "http://localhost:3000";
+const ALLOWED_ORIGIN = "http://localhost:5173";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;

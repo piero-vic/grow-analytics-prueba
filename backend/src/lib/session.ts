@@ -1,4 +1,4 @@
-import type { User, Session } from "@prisma/client";
+import type { Session } from "@prisma/client";
 import type { Response } from "express";
 import {
   encodeBase32LowerCaseNoPadding,
@@ -41,7 +41,12 @@ export async function validateSessionToken(
       id: sessionId,
     },
     include: {
-      user: true,
+      user: {
+        select: {
+          id: true,
+          email: true,
+        },
+      },
     },
   });
   if (result === null) {
@@ -116,6 +121,11 @@ export function readSessionCookie(cookieHeader: string): string | null {
 
   return cookies.get("session") ?? null;
 }
+
+type User = {
+  id: number;
+  email: string;
+};
 
 export type SessionValidationResult =
   | { session: Session; user: User }

@@ -20,7 +20,7 @@ const ARGON2_OPTIONS: Options = {
 export const authRouter = Router();
 
 const loginSchema = z.object({
-  username: z.string(),
+  email: z.string().email(),
   password: z.string(),
 });
 
@@ -35,7 +35,7 @@ authRouter.post("/login", async (req, res) => {
 
   const user = await prisma.user.findUnique({
     where: {
-      username: data.username,
+      email: data.email,
     },
   });
   if (!user) {
@@ -115,4 +115,19 @@ authRouter.post("/logout", async (_, res) => {
   deleteSessionTokenCookie(res);
 
   res.status(200).end();
+});
+
+authRouter.get("/me", async (_, res) => {
+  if (!res.locals.session) {
+    res.status(401).end();
+    return;
+  }
+
+  if (!res.locals.user) {
+    res.status(401).end();
+    return;
+  }
+
+  res.json(res.locals.user).status(200).end();
+  return;
 });
