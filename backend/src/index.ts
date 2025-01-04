@@ -5,7 +5,8 @@ import {
   validateSessionToken,
   deleteSessionTokenCookie,
   setSessionTokenCookie,
-} from "./lib/session";
+} from "./lib/session.js";
+import { authRouter } from "./routes/auth.js";
 
 dotenv.config();
 
@@ -13,6 +14,8 @@ const ALLOWED_ORIGIN = "http://localhost:3000";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
+
+app.use(express.json());
 
 // CSRF protection
 app.use((req, res, next) => {
@@ -59,6 +62,8 @@ app.use(async (req, res, next) => {
 app.get("/", (req: Request, res: Response) => {
   res.send("Grow Analytics");
 });
+
+app.use("/auth", authRouter);
 
 app.listen(port, () => {
   console.log(`Server running in port ${port}`);
