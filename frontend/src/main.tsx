@@ -5,6 +5,7 @@ import "antd/dist/reset.css";
 import App from "./App.tsx";
 import Login from "./routes/Login.tsx";
 import SignUp from "./routes/SignUp.tsx";
+import Users from "./routes/Users.tsx";
 import { AuthProvider, RequireAuth, RequireUnauth } from "./lib/auth.tsx";
 
 createRoot(document.getElementById("root")!).render(
@@ -20,6 +21,7 @@ createRoot(document.getElementById("root")!).render(
               </RequireAuth>
             }
           />
+          <Route path="/users" element={<Users />} />
           <Route
             path="/login"
             element={
