@@ -7,6 +7,7 @@ import {
   setSessionTokenCookie,
 } from "./lib/session.js";
 import { authRouter } from "./routes/auth.js";
+import { usersRouter } from "./routes/users.js";
 
 dotenv.config();
 
@@ -64,6 +65,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/auth", authRouter);
+
+// TODO: Agregar middleware para validar autenticación
+app.use("/users", usersRouter);
 
 app.listen(port, () => {
   console.log(`Server running in port ${port}`);
