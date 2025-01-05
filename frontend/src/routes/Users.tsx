@@ -7,12 +7,13 @@ import {
   Table,
   Space,
   Button,
-  TableColumnsType,
   type GetProp,
   type TableProps,
 } from "antd";
-const { Title } = Typography;
 import type { SorterResult } from "antd/es/table/interface";
+
+const { Title } = Typography;
+const { Column } = Table;
 
 type TablePaginationConfig = Exclude<
   GetProp<TableProps, "pagination">,
@@ -34,39 +35,6 @@ interface TableParams {
   sortOrder?: SorterResult<any>["order"];
   filters?: Parameters<GetProp<TableProps, "onChange">>[1];
 }
-
-const columns: TableColumnsType<DataType> = [
-  {
-    title: "ID",
-    dataIndex: "id",
-    key: "id",
-    sorter: (a, b) => a.id - b.id,
-  },
-  {
-    title: "Email",
-    dataIndex: "email",
-    key: "email",
-    sorter: (a, b) => (a.email > b.email ? 1 : 0),
-  },
-  {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
-    sorter: (a, b) => (a.name > b.name ? 1 : 0),
-    render: (_, record) =>
-      `${record.name} ${record.paternalLastName} ${record.maternalLastName}`,
-  },
-  {
-    title: "Action",
-    key: "action",
-    render: (_, record) => (
-      <Space size="middle">
-        <Button variant="outlined" color="primary" icon={<EditFilled />} />
-        <Button variant="outlined" color="danger" icon={<DeleteFilled />} />
-      </Space>
-    ),
-  },
-];
 
 const Users: React.FC = () => {
   const [data, setData] = useState<DataType[]>();
@@ -95,6 +63,16 @@ const Users: React.FC = () => {
           },
         });
       });
+  };
+
+  const deleteUser = async (id: number) => {
+    const res = await fetch(`http://localhost:3000/users/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      fetchData();
+    }
   };
 
   useEffect(fetchData, [
@@ -135,14 +113,59 @@ const Users: React.FC = () => {
         >
           <Title style={{ textAlign: "center" }}>Usuarios</Title>
           <Table<DataType>
-            columns={columns}
             rowKey={(record) => record.id}
             dataSource={data}
             pagination={tableParams.pagination}
             loading={loading}
             onChange={handleTableChange}
             style={{ width: "100%" }}
-          />
+          >
+            <Column
+              title="ID"
+              dataIndex="id"
+              key="id"
+              sorter={(a, b) => a.id - b.id}
+            />
+            <Column
+              title="Email"
+              dataIndex="email"
+              key="email"
+              sorter={(a, b) => (a.email > b.email ? 1 : 0)}
+            />
+            <Column
+              title="Name"
+              dataIndex="name"
+              key="name"
+              sorter={(a, b) => (a.name > b.name ? 1 : 0)}
+              render={(_, record) =>
+                `${record.name} ${record.paternalLastName} ${record.maternalLastName}`
+              }
+            />
+            <Column
+              title="Action"
+              dataIndex="action"
+              key="action"
+              render={(_, record) => (
+                <Space size="middle">
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    icon={<EditFilled />}
+                    onClick={() => {
+                      // TODO: Agregar modal para editar usuario
+                      alert("Agregar modal para editar usuario");
+                    }}
+                  />
+                  <Button
+                    variant="outlined"
+                    color="danger"
+                    icon={<DeleteFilled />}
+                    onClick={() => deleteUser(record.id)}
+                  />
+                </Space>
+              )}
+            />
+          </Table>
         </Flex>
       </Layout.Content>
     </Layout>
