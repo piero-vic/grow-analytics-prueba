@@ -3,12 +3,15 @@ import { DeleteFilled, EditFilled } from "@ant-design/icons";
 import {
   Layout,
   Flex,
+  Form,
   Typography,
   Table,
   Space,
   Button,
   type GetProp,
   type TableProps,
+  Modal,
+  Input,
 } from "antd";
 import type { SorterResult } from "antd/es/table/interface";
 
@@ -65,16 +68,6 @@ const Users: React.FC = () => {
       });
   };
 
-  const deleteUser = async (id: number) => {
-    const res = await fetch(`http://localhost:3000/users/${id}`, {
-      method: "DELETE",
-    });
-
-    if (res.ok) {
-      fetchData();
-    }
-  };
-
   useEffect(fetchData, [
     tableParams.pagination?.current,
     tableParams.pagination?.pageSize,
@@ -100,6 +93,109 @@ const Users: React.FC = () => {
     }
   };
 
+  // NOTE: Eliminar usuarios
+  const deleteUser = (id: number) => {
+    Modal.confirm({
+      title: "¿Quieres eliminar este usuario?",
+      okText: "Eliminar",
+      okButtonProps: { variant: "solid", color: "danger" },
+      cancelText: "Cancelar",
+      onOk: async () => {
+        const res = await fetch(`http://localhost:3000/users/${id}`, {
+          method: "DELETE",
+        });
+
+        if (res.ok) {
+          fetchData();
+        }
+      },
+    });
+  };
+
+  // NOTE: Editar usuarios
+  const openModal = (userData: DataType) => {
+    const modal = Modal.info({});
+
+    modal.update({
+      icon: null,
+      title: "Editar usuario",
+      okText: "Guardar",
+      cancelText: "Cancelar",
+      okButtonProps: { htmlType: "submit" },
+      modalRender: (dom) => (
+        <Form
+          name="edit-user"
+          initialValues={userData}
+          style={{ width: "100%" }}
+          onFinish={async (values) => {
+            const res = await fetch(
+              `http://localhost:3000/users/${userData.id}`,
+              {
+                method: "PUT",
+                body: JSON.stringify(values),
+                headers: new Headers({ "content-type": "application/json" }),
+              },
+            );
+
+            if (res.ok) {
+              fetchData();
+            }
+          }}
+        >
+          {dom}
+        </Form>
+      ),
+      content: (
+        <>
+          <Form.Item
+            name="username"
+            rules={[{ required: true, message: "Please input your username!" }]}
+          >
+            <Input placeholder="Username" />
+          </Form.Item>
+
+          <Form.Item
+            name="name"
+            rules={[{ required: true, message: "Please input your name!" }]}
+          >
+            <Input placeholder="Name" />
+          </Form.Item>
+
+          <Form.Item
+            name="paternalLastName"
+            rules={[
+              {
+                required: true,
+                message: "Please input your paternal last name!",
+              },
+            ]}
+          >
+            <Input placeholder="Paternal last name" />
+          </Form.Item>
+
+          <Form.Item
+            name="maternalLastName"
+            rules={[
+              {
+                required: true,
+                message: "Please input your maternal last name!",
+              },
+            ]}
+          >
+            <Input placeholder="Maternal last name" />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            rules={[{ required: true, message: "Please input your email!" }]}
+          >
+            <Input type="email" placeholder="Email" />
+          </Form.Item>
+        </>
+      ),
+    });
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Layout.Content
@@ -120,19 +216,19 @@ const Users: React.FC = () => {
             onChange={handleTableChange}
             style={{ width: "100%" }}
           >
-            <Column
+            <Column<DataType>
               title="ID"
               dataIndex="id"
               key="id"
               sorter={(a, b) => a.id - b.id}
             />
-            <Column
+            <Column<DataType>
               title="Email"
               dataIndex="email"
               key="email"
               sorter={(a, b) => (a.email > b.email ? 1 : 0)}
             />
-            <Column
+            <Column<DataType>
               title="Name"
               dataIndex="name"
               key="name"
@@ -141,7 +237,7 @@ const Users: React.FC = () => {
                 `${record.name} ${record.paternalLastName} ${record.maternalLastName}`
               }
             />
-            <Column
+            <Column<DataType>
               title="Action"
               dataIndex="action"
               key="action"
@@ -151,10 +247,7 @@ const Users: React.FC = () => {
                     variant="outlined"
                     color="primary"
                     icon={<EditFilled />}
-                    onClick={() => {
-                      // TODO: Agregar modal para editar usuario
-                      alert("Agregar modal para editar usuario");
-                    }}
+                    onClick={() => openModal(record)}
                   />
                   <Button
                     variant="outlined"
