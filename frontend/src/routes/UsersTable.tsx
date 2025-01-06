@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DeleteFilled, EditFilled, SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 import {
   Layout,
   Flex,
@@ -13,21 +13,17 @@ import {
   type TableColumnType,
   type TablePaginationConfig,
 } from "antd";
+import {
+  deleteUser,
+  getUsers,
+  updateUser,
+  type User,
+  type UserProperty,
+} from "../users";
+import ActionButtons from "../components/ActionButtons";
 
 const { Title } = Typography;
 const { Column } = Table;
-
-type User = {
-  id: number;
-  username: string;
-  email: string;
-  userType: "USER" | "ADMIN";
-  name: string;
-  paternalLastName: string;
-  maternalLastName: string;
-};
-
-type DataIndex = keyof User;
 
 const UsersTable: React.FC = () => {
   const [data, setData] = useState<User[]>();
@@ -40,81 +36,16 @@ const UsersTable: React.FC = () => {
   const { current: currentPage } = pagination;
 
   const fetchData = () => {
+    // TODO: Manejo de errores
     setLoading(true);
-    fetch(`http://localhost:3000/users?page=${currentPage || "1"}&size=10`)
-      .then((res) => res.json())
-      .then(({ results, totalCount }) => {
-        setData(results);
-        setLoading(false);
-        setPagination((state) => ({ ...state, total: totalCount }));
-      });
+    getUsers(currentPage).then(({ results, totalCount }) => {
+      setData(results);
+      setLoading(false);
+      setPagination((prev) => ({ ...prev, total: totalCount }));
+    });
   };
 
   useEffect(fetchData, [currentPage]);
-
-  // NOTE: Función para obtener las props necesarias para la funcionalidad de filtrado
-  const getColumnSearchProps = (
-    dataIndex: DataIndex,
-  ): TableColumnType<User> => ({
-    filterDropdown: ({
-      setSelectedKeys,
-      selectedKeys,
-      confirm,
-      clearFilters,
-      close,
-    }) => (
-      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-        <Input
-          placeholder="Buscar"
-          value={selectedKeys[0]}
-          onChange={(e) => {
-            setSelectedKeys(e.target.value ? [e.target.value] : []);
-          }}
-          onPressEnter={() => confirm()}
-          style={{ marginBottom: 8, display: "block" }}
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => confirm()}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button
-            onClick={() => {
-              clearFilters?.();
-              confirm();
-              close();
-            }}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => {
-              close();
-            }}
-          >
-            Close
-          </Button>
-        </Space>
-      </div>
-    ),
-    filterIcon: (filtered: boolean) => (
-      <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
-    ),
-    onFilter: (value, record) =>
-      record[dataIndex]
-        .toString()
-        .toLowerCase()
-        .includes((value as string).toLowerCase()),
-  });
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -133,9 +64,7 @@ const UsersTable: React.FC = () => {
             dataSource={data}
             pagination={pagination}
             loading={loading}
-            onChange={(pagination) => {
-              setPagination(pagination);
-            }}
+            onChange={(pagination) => setPagination(pagination)}
             style={{ width: "100%" }}
             scroll={{ x: "max-content" }}
           >
@@ -182,20 +111,10 @@ const UsersTable: React.FC = () => {
               key="action"
               width="30%"
               render={(_, record) => (
-                <Space size="middle">
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    icon={<EditFilled />}
-                    onClick={() => openUserEditModal(record, fetchData)}
-                  />
-                  <Button
-                    variant="outlined"
-                    color="danger"
-                    icon={<DeleteFilled />}
-                    onClick={() => openUserDeleteModal(record.id, fetchData)}
-                  />
-                </Space>
+                <ActionButtons
+                  onEdit={() => openUserEditModal(record, fetchData)}
+                  onDelete={() => openUserDeleteModal(record.id, fetchData)}
+                />
               )}
             />
           </Table>
@@ -205,6 +124,70 @@ const UsersTable: React.FC = () => {
   );
 };
 
+// NOTE: Función para obtener las props necesarias para la funcionalidad de filtrado
+const getColumnSearchProps = (
+  dataIndex: UserProperty,
+): TableColumnType<User> => ({
+  filterDropdown: ({
+    setSelectedKeys,
+    selectedKeys,
+    confirm,
+    clearFilters,
+    close,
+  }) => (
+    <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+      <Input
+        placeholder="Buscar"
+        value={selectedKeys[0]}
+        onChange={(e) => {
+          setSelectedKeys(e.target.value ? [e.target.value] : []);
+        }}
+        onPressEnter={() => confirm()}
+        style={{ marginBottom: 8, display: "block" }}
+      />
+      <Space>
+        <Button
+          type="primary"
+          onClick={() => confirm()}
+          icon={<SearchOutlined />}
+          size="small"
+          style={{ width: 90 }}
+        >
+          Search
+        </Button>
+        <Button
+          onClick={() => {
+            clearFilters?.();
+            confirm();
+            close();
+          }}
+          size="small"
+          style={{ width: 90 }}
+        >
+          Reset
+        </Button>
+        <Button
+          type="link"
+          size="small"
+          onClick={() => {
+            close();
+          }}
+        >
+          Close
+        </Button>
+      </Space>
+    </div>
+  ),
+  filterIcon: (filtered: boolean) => (
+    <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+  ),
+  onFilter: (value, record) =>
+    record[dataIndex]
+      .toString()
+      .toLowerCase()
+      .includes((value as string).toLowerCase()),
+});
+
 const openUserDeleteModal = (id: number, onSucess: () => void) => {
   Modal.confirm({
     title: "¿Quieres eliminar este usuario?",
@@ -212,11 +195,8 @@ const openUserDeleteModal = (id: number, onSucess: () => void) => {
     okButtonProps: { variant: "solid", color: "danger" },
     cancelText: "Cancelar",
     onOk: async () => {
-      const res = await fetch(`http://localhost:3000/users/${id}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
+      const ok = await deleteUser(id);
+      if (ok) {
         onSucess();
       }
     },
@@ -236,13 +216,8 @@ const openUserEditModal = (user: User, onSucess: () => void) => {
         initialValues={user}
         style={{ width: "100%" }}
         onFinish={async (values) => {
-          const res = await fetch(`http://localhost:3000/users/${user.id}`, {
-            method: "PUT",
-            body: JSON.stringify({ ...user, ...values }),
-            headers: new Headers({ "content-type": "application/json" }),
-          });
-
-          if (res.ok) {
+          const ok = await updateUser({ ...user, ...values });
+          if (ok) {
             onSucess();
           }
         }}

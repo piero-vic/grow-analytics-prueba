@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DeleteFilled, EditFilled, SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 import {
   Layout,
   Flex,
@@ -10,25 +10,21 @@ import {
   Button,
   Modal,
   Input,
-  Select,
   type TableColumnType,
   type TablePaginationConfig,
 } from "antd";
+import {
+  deleteUser,
+  getUsers,
+  updateUser,
+  type User,
+  type UserProperty,
+} from "../users";
+import ActionButtons from "../components/ActionButtons";
+import EditableCell from "../components/EditableCell";
 
 const { Title } = Typography;
 const { Column } = Table;
-
-type User = {
-  id: number;
-  username: string;
-  email: string;
-  userType: "USER" | "ADMIN";
-  name: string;
-  paternalLastName: string;
-  maternalLastName: string;
-};
-
-type DataIndex = keyof User;
 
 const UsersEditTable: React.FC = () => {
   const [data, setData] = useState<User[]>();
@@ -41,21 +37,34 @@ const UsersEditTable: React.FC = () => {
   const { current: currentPage } = pagination;
 
   const fetchData = () => {
+    // TODO: Manejo de errores
     setLoading(true);
-    fetch(`http://localhost:3000/users?page=${currentPage || "1"}&size=10`)
-      .then((res) => res.json())
-      .then(({ results, totalCount }) => {
-        setData(results);
-        setLoading(false);
-        setPagination((state) => ({ ...state, total: totalCount }));
-      });
+    getUsers(currentPage).then(({ results, totalCount }) => {
+      setData(results);
+      setLoading(false);
+      setPagination((prev) => ({ ...prev, total: totalCount }));
+    });
   };
 
   useEffect(fetchData, [currentPage]);
 
   // NOTE: Función para obtener las props necesarias para la funcionalidad de filtrado
+  const getColumnCellProps = (
+    dataIndex: UserProperty,
+  ): TableColumnType<User> => {
+    return {
+      onCell: (record) => ({
+        editing: isEditing(record),
+        dataIndex: dataIndex,
+        title: dataIndex,
+        inputType: dataIndex === "userType" ? "select" : "text",
+        options: dataIndex === "userType" ? ["ADMIN", "USER"] : [],
+      }),
+    };
+  };
+
   const getColumnSearchProps = (
-    dataIndex: DataIndex,
+    dataIndex: UserProperty,
   ): TableColumnType<User> => ({
     filterDropdown: ({
       setSelectedKeys,
@@ -115,19 +124,11 @@ const UsersEditTable: React.FC = () => {
         .toString()
         .toLowerCase()
         .includes((value as string).toLowerCase()),
-    onCell: (record: User) => ({
-      record,
-      inputType: dataIndex === "userType" ? "select" : "text",
-      options: dataIndex === "userType" ? ["ADMIN", "USER"] : [],
-      dataIndex: dataIndex,
-      title: dataIndex,
-      // NOTE: El ID no puede ser editado porque es el identificador de usuario
-      editing: dataIndex === "id" ? false : isEditing(record),
-    }),
   });
 
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<number | null>();
+
   const isEditing = (record: User) => record.id === editingKey;
 
   const edit = (record: User) => {
@@ -135,17 +136,11 @@ const UsersEditTable: React.FC = () => {
     setEditingKey(record.id);
   };
 
-  const save = async (record: User) => {
+  const save = async (user: User) => {
     try {
-      const user = (await form.validateFields()) as Omit<User, "id">;
-
-      const res = await fetch(`http://localhost:3000/users/${record.id}`, {
-        method: "PUT",
-        body: JSON.stringify({ ...record, ...user }),
-        headers: new Headers({ "content-type": "application/json" }),
-      });
-
-      if (res.ok) {
+      const values = (await form.validateFields()) as Omit<User, "id">;
+      const ok = await updateUser({ ...user, ...values });
+      if (ok) {
         fetchData();
         setEditingKey(null);
       }
@@ -172,9 +167,7 @@ const UsersEditTable: React.FC = () => {
               dataSource={data}
               pagination={pagination}
               loading={loading}
-              onChange={(pagination) => {
-                setPagination(pagination);
-              }}
+              onChange={(pagination) => setPagination(pagination)}
               style={{ width: "100%" }}
               scroll={{ x: "max-content" }}
               components={{ body: { cell: EditableCell } }}
@@ -195,6 +188,7 @@ const UsersEditTable: React.FC = () => {
                 key="username"
                 sorter={(a, b) => a.username.localeCompare(b.username)}
                 {...getColumnSearchProps("username")}
+                {...getColumnCellProps("username")}
               />
 
               <Column<User>
@@ -204,6 +198,7 @@ const UsersEditTable: React.FC = () => {
                 key="userType"
                 sorter={(a, b) => a.userType.localeCompare(b.userType)}
                 {...getColumnSearchProps("userType")}
+                {...getColumnCellProps("userType")}
               />
 
               <Column<User>
@@ -211,51 +206,15 @@ const UsersEditTable: React.FC = () => {
                 dataIndex="action"
                 width="30%"
                 key="action"
-                render={(_, record) => {
-                  const editing = isEditing(record);
-
-                  if (editing) {
-                    return (
-                      <Space size="small">
-                        <Button
-                          size="small"
-                          variant="link"
-                          color="primary"
-                          onClick={() => save(record)}
-                        >
-                          Guardar
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="link"
-                          color="danger"
-                          onClick={() => setEditingKey(null)}
-                        >
-                          Cancelar
-                        </Button>
-                      </Space>
-                    );
-                  }
-
-                  return (
-                    <Space size="middle">
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        icon={<EditFilled />}
-                        onClick={() => edit(record)}
-                      />
-                      <Button
-                        variant="outlined"
-                        color="danger"
-                        icon={<DeleteFilled />}
-                        onClick={() =>
-                          openUserDeleteModal(record.id, fetchData)
-                        }
-                      />
-                    </Space>
-                  );
-                }}
+                render={(_, record) => (
+                  <ActionButtons
+                    editing={isEditing(record)}
+                    onSave={() => save(record)}
+                    onCancel={() => setEditingKey(null)}
+                    onEdit={() => edit(record)}
+                    onDelete={() => openUserDeleteModal(record.id, fetchData)}
+                  />
+                )}
               />
             </Table>
           </Flex>
@@ -272,67 +231,12 @@ const openUserDeleteModal = (id: number, onSucess: () => void) => {
     okButtonProps: { variant: "solid", color: "danger" },
     cancelText: "Cancelar",
     onOk: async () => {
-      const res = await fetch(`http://localhost:3000/users/${id}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
+      const ok = await deleteUser(id);
+      if (ok) {
         onSucess();
       }
     },
   });
-};
-
-interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
-  editing: boolean;
-  dataIndex: string;
-  title: any;
-  inputType: "text" | "select";
-  options?: string[];
-  record: User;
-  index: number;
-}
-
-const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
-  editing,
-  dataIndex,
-  title,
-  inputType,
-  record,
-  index,
-  children,
-  options = [],
-  ...restProps
-}) => {
-  const inputNode =
-    inputType === "select" ? (
-      <Select
-        options={options.map((option) => ({ value: option, label: option }))}
-      />
-    ) : (
-      <Input />
-    );
-
-  return (
-    <td {...restProps}>
-      {editing ? (
-        <Form.Item
-          name={dataIndex}
-          style={{ margin: 0 }}
-          rules={[
-            {
-              required: true,
-              message: `Please Input ${title}!`,
-            },
-          ]}
-        >
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
-  );
 };
 
 export default UsersEditTable;
