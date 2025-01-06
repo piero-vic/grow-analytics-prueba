@@ -35,10 +35,10 @@ const data = [
   { username: "user28", email: "user28@example.com", name: "Brianna", paternalLastName: "Chapman", maternalLastName: "Fisher", password: "$argon2id$v=19$m=19456,t=2,p=1$NOcdlQ3W2BakMYiloiC8gQ$8TNbNx1M0zhYif0iZTSLWqFkKWOYK7BepIpxx8uycqE", userType: "USER" },
   { username: "user29", email: "user29@example.com", name: "Caleb", paternalLastName: "Sullivan", maternalLastName: "Gill", password: "$argon2id$v=19$m=19456,t=2,p=1$NOcdlQ3W2BakMYiloiC8gQ$8TNbNx1M0zhYif0iZTSLWqFkKWOYK7BepIpxx8uycqE", userType: "USER" },
   { username: "user30", email: "user30@example.com", name: "Diana", paternalLastName: "Hart", maternalLastName: "Fuller", password: "$argon2id$v=19$m=19456,t=2,p=1$NOcdlQ3W2BakMYiloiC8gQ$8TNbNx1M0zhYif0iZTSLWqFkKWOYK7BepIpxx8uycqE", userType: "USER" }
-];
+] as any;
 
 async function main() {
-  await prisma.user.createMany({ data });
+  await prisma.user.createMany({ data, skipDuplicates: true });
 }
 
 main()
