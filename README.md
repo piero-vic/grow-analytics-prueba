@@ -40,3 +40,10 @@ npm ci
 # Correr aplicación en modo desarrollo
 npm run dev
 ```
+
+### Usuarios de prueba
+
+```
+Email: user1@example.com
+Password: password
+```
