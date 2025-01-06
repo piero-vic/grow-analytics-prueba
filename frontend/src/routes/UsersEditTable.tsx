@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 import {
-  Layout,
   Flex,
   Form,
   Typography,
@@ -151,75 +150,69 @@ const UsersEditTable: React.FC = () => {
 
   return (
     <Form form={form} component={false}>
-      <Layout style={{ minHeight: "100vh" }}>
-        <Layout.Content
-          style={{ margin: "24px 16px", display: "flex", alignItems: "center" }}
+      <Flex
+        vertical
+        align="center"
+        justify="center"
+        style={{ width: "100%", marginInline: "auto" }}
+      >
+        <Title style={{ textAlign: "center" }}>Admin</Title>
+        <Table<User>
+          rowKey={(record) => record.id}
+          dataSource={data}
+          pagination={pagination}
+          loading={loading}
+          onChange={(pagination) => setPagination(pagination)}
+          style={{ width: "100%" }}
+          scroll={{ x: "max-content" }}
+          components={{ body: { cell: EditableCell } }}
         >
-          <Flex
-            vertical
-            align="center"
-            justify="center"
-            style={{ width: "100%", marginInline: "auto" }}
-          >
-            <Title style={{ textAlign: "center" }}>Usuarios</Title>
-            <Table<User>
-              rowKey={(record) => record.id}
-              dataSource={data}
-              pagination={pagination}
-              loading={loading}
-              onChange={(pagination) => setPagination(pagination)}
-              style={{ width: "100%" }}
-              scroll={{ x: "max-content" }}
-              components={{ body: { cell: EditableCell } }}
-            >
-              <Column<User>
-                title="ID"
-                dataIndex="id"
-                width="10%"
-                key="id"
-                sorter={(a, b) => a.id - b.id}
-                {...getColumnSearchProps("id")}
-              />
+          <Column<User>
+            title="ID"
+            dataIndex="id"
+            width="10%"
+            key="id"
+            sorter={(a, b) => a.id - b.id}
+            {...getColumnSearchProps("id")}
+          />
 
-              <Column<User>
-                title="Username"
-                dataIndex="username"
-                width="30%"
-                key="username"
-                sorter={(a, b) => a.username.localeCompare(b.username)}
-                {...getColumnSearchProps("username")}
-                {...getColumnCellProps("username")}
-              />
+          <Column<User>
+            title="Username"
+            dataIndex="username"
+            width="30%"
+            key="username"
+            sorter={(a, b) => a.username.localeCompare(b.username)}
+            {...getColumnSearchProps("username")}
+            {...getColumnCellProps("username")}
+          />
 
-              <Column<User>
-                title="Tipo de usuario"
-                dataIndex="userType"
-                width="30%"
-                key="userType"
-                sorter={(a, b) => a.userType.localeCompare(b.userType)}
-                {...getColumnSearchProps("userType")}
-                {...getColumnCellProps("userType")}
-              />
+          <Column<User>
+            title="Tipo de usuario"
+            dataIndex="userType"
+            width="30%"
+            key="userType"
+            sorter={(a, b) => a.userType.localeCompare(b.userType)}
+            {...getColumnSearchProps("userType")}
+            {...getColumnCellProps("userType")}
+          />
 
-              <Column<User>
-                title="Action"
-                dataIndex="action"
-                width="30%"
-                key="action"
-                render={(_, record) => (
-                  <ActionButtons
-                    editing={isEditing(record)}
-                    onSave={() => save(record)}
-                    onCancel={() => setEditingKey(null)}
-                    onEdit={() => edit(record)}
-                    onDelete={() => openUserDeleteModal(record.id, fetchData)}
-                  />
-                )}
+          <Column<User>
+            title="Action"
+            dataIndex="action"
+            width="30%"
+            key="action"
+            render={(_, record) => (
+              <ActionButtons
+                editing={isEditing(record)}
+                onSave={() => save(record)}
+                onCancel={() => setEditingKey(null)}
+                onEdit={() => edit(record)}
+                onDelete={() => openUserDeleteModal(record.id, fetchData)}
               />
-            </Table>
-          </Flex>
-        </Layout.Content>
-      </Layout>
+            )}
+          />
+        </Table>
+      </Flex>
     </Form>
   );
 };

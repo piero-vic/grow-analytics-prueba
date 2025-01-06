@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 import {
-  Layout,
   Flex,
   Form,
   Typography,
@@ -48,79 +47,73 @@ const UsersTable: React.FC = () => {
   useEffect(fetchData, [currentPage]);
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Layout.Content
-        style={{ margin: "24px 16px", display: "flex", alignItems: "center" }}
+    <Flex
+      vertical
+      align="center"
+      justify="center"
+      style={{ width: "100%", marginInline: "auto" }}
+    >
+      <Title style={{ textAlign: "center" }}>Usuarios</Title>
+      <Table<User>
+        rowKey={(record) => record.id}
+        dataSource={data}
+        pagination={pagination}
+        loading={loading}
+        onChange={(pagination) => setPagination(pagination)}
+        style={{ width: "100%" }}
+        scroll={{ x: "max-content" }}
       >
-        <Flex
-          vertical
-          align="center"
-          justify="center"
-          style={{ width: "100%", marginInline: "auto" }}
-        >
-          <Title style={{ textAlign: "center" }}>Usuarios</Title>
-          <Table<User>
-            rowKey={(record) => record.id}
-            dataSource={data}
-            pagination={pagination}
-            loading={loading}
-            onChange={(pagination) => setPagination(pagination)}
-            style={{ width: "100%" }}
-            scroll={{ x: "max-content" }}
-          >
-            <Column<User>
-              title="ID"
-              dataIndex="id"
-              key="id"
-              width="10%"
-              sorter={(a, b) => a.id - b.id}
-              {...getColumnSearchProps("id")}
-            />
+        <Column<User>
+          title="ID"
+          dataIndex="id"
+          key="id"
+          width="10%"
+          sorter={(a, b) => a.id - b.id}
+          {...getColumnSearchProps("id")}
+        />
 
-            <Column<User>
-              title="Name"
-              dataIndex="name"
-              key="name"
-              width="30%"
-              sorter={(a, b) => a.name.localeCompare(b.name)}
-              render={(_, record) =>
-                `${record.name} ${record.paternalLastName} ${record.maternalLastName}`
-              }
-              {...getColumnSearchProps("name")}
-              // NOTE: Filtro personalizado para poder filtrar el nombre completo
-              onFilter={(value, record) =>
-                `${record.name} ${record.paternalLastName} ${record.maternalLastName}`
-                  .toString()
-                  .toLowerCase()
-                  .includes((value as string).toLowerCase())
-              }
-            />
+        <Column<User>
+          title="Name"
+          dataIndex="name"
+          key="name"
+          width="30%"
+          sorter={(a, b) => a.name.localeCompare(b.name)}
+          render={(_, record) =>
+            `${record.name} ${record.paternalLastName} ${record.maternalLastName}`
+          }
+          {...getColumnSearchProps("name")}
+          // NOTE: Filtro personalizado para poder filtrar el nombre completo
+          onFilter={(value, record) =>
+            `${record.name} ${record.paternalLastName} ${record.maternalLastName}`
+              .toString()
+              .toLowerCase()
+              .includes((value as string).toLowerCase())
+          }
+        />
 
-            <Column<User>
-              title="Email"
-              dataIndex="email"
-              key="email"
-              width="30%"
-              sorter={(a, b) => a.email.localeCompare(b.email)}
-              {...getColumnSearchProps("email")}
-            />
+        <Column<User>
+          title="Email"
+          dataIndex="email"
+          key="email"
+          width="30%"
+          sorter={(a, b) => a.email.localeCompare(b.email)}
+          {...getColumnSearchProps("email")}
+        />
 
-            <Column<User>
-              title="Action"
-              dataIndex="action"
-              key="action"
-              width="30%"
-              render={(_, record) => (
-                <ActionButtons
-                  onEdit={() => openUserEditModal(record, fetchData)}
-                  onDelete={() => openUserDeleteModal(record.id, fetchData)}
-                />
-              )}
+        <Column<User>
+          title="Action"
+          dataIndex="action"
+          key="action"
+          width="30%"
+          render={(_, record) => (
+            <ActionButtons
+              onEdit={() => openUserEditModal(record, fetchData)}
+              onDelete={() => openUserDeleteModal(record.id, fetchData)}
             />
-          </Table>
-        </Flex>
-      </Layout.Content>
-    </Layout>
+          )}
+        />
+      </Table>
+    </Flex>
   );
 };
 

@@ -21,9 +21,9 @@ type Auth = {
 
 const authContext = React.createContext<Auth>({
   authed: false,
-  login: async (credentials: Credentials) => { },
-  signup: async (userData: Credentials) => { },
-  logout: async () => { },
+  login: async (_: Credentials) => {},
+  signup: async (_: Credentials) => {},
+  logout: async () => {},
 });
 
 export function useAuth() {

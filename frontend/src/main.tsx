@@ -1,46 +1,15 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter } from "react-router";
 import "antd/dist/reset.css";
 import App from "./App.tsx";
-import Login from "./routes/Login.tsx";
-import SignUp from "./routes/SignUp.tsx";
-import UsersTable from "./routes/UsersTable.tsx";
-import UsersEditTable from "./routes/UsersEditTable.tsx";
-import { AuthProvider, RequireAuth, RequireUnauth } from "./lib/auth.tsx";
+import { AuthProvider } from "./lib/auth.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <RequireAuth>
-                <App />
-              </RequireAuth>
-            }
-          />
-          <Route path="/users" element={<UsersTable />} />
-          <Route path="/admin/users/" element={<UsersEditTable />} />
-          <Route
-            path="/login"
-            element={
-              <RequireUnauth>
-                <Login />
-              </RequireUnauth>
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <RequireUnauth>
-                <SignUp />
-              </RequireUnauth>
-            }
-          />
-        </Routes>
+        <App />
       </BrowserRouter>
     </AuthProvider>
   </StrictMode>,
