@@ -21,6 +21,7 @@ type User = {
   id: number;
   username: string;
   email: string;
+  userType: "USER" | "ADMIN";
   name: string;
   paternalLastName: string;
   maternalLastName: string;
@@ -28,7 +29,7 @@ type User = {
 
 type DataIndex = keyof User;
 
-const Users: React.FC = () => {
+const UsersTable: React.FC = () => {
   const [data, setData] = useState<User[]>();
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState<TablePaginationConfig>({
@@ -142,6 +143,7 @@ const Users: React.FC = () => {
               title="ID"
               dataIndex="id"
               key="id"
+              width="10%"
               sorter={(a, b) => a.id - b.id}
               {...getColumnSearchProps("id")}
             />
@@ -150,6 +152,7 @@ const Users: React.FC = () => {
               title="Name"
               dataIndex="name"
               key="name"
+              width="30%"
               sorter={(a, b) => a.name.localeCompare(b.name)}
               render={(_, record) =>
                 `${record.name} ${record.paternalLastName} ${record.maternalLastName}`
@@ -168,6 +171,7 @@ const Users: React.FC = () => {
               title="Email"
               dataIndex="email"
               key="email"
+              width="30%"
               sorter={(a, b) => a.email.localeCompare(b.email)}
               {...getColumnSearchProps("email")}
             />
@@ -176,6 +180,7 @@ const Users: React.FC = () => {
               title="Action"
               dataIndex="action"
               key="action"
+              width="30%"
               render={(_, record) => (
                 <Space size="middle">
                   <Button
@@ -233,7 +238,7 @@ const openUserEditModal = (user: User, onSucess: () => void) => {
         onFinish={async (values) => {
           const res = await fetch(`http://localhost:3000/users/${user.id}`, {
             method: "PUT",
-            body: JSON.stringify(values),
+            body: JSON.stringify({ ...user, ...values }),
             headers: new Headers({ "content-type": "application/json" }),
           });
 
@@ -296,4 +301,4 @@ const openUserEditModal = (user: User, onSucess: () => void) => {
   });
 };
 
-export default Users;
+export default UsersTable;
