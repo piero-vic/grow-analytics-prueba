@@ -44,7 +44,12 @@ export async function validateSessionToken(
       user: {
         select: {
           id: true,
+          username: true,
           email: true,
+          userType: true,
+          name: true,
+          paternalLastName: true,
+          maternalLastName: true,
         },
       },
     },
